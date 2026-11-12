@@ -1,0 +1,1 @@
+"""FridgeLedger backend package."""

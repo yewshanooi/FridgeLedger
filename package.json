@@ -1,0 +1,13 @@
+{
+  "name": "fridge-ledger",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && .venv\\Scripts\\activate && uvicorn app.main:app --reload"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

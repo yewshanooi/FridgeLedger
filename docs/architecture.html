@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FridgeLedger — System Architecture</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f4f0;
+      padding: 40px 24px;
+      color: #1f2a24;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #1f2a24;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 13px;
+      color: #526056;
+      margin-bottom: 40px;
+    }
+
+    .diagram {
+      max-width: 1000px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    /* ── Layer label ── */
+    .layer-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #8a9490;
+      margin-bottom: 10px;
+      padding-left: 4px;
+    }
+
+    /* ── Row of boxes in one layer ── */
+    .row {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    /* ── Generic box ── */
+    .box {
+      border-radius: 12px;
+      padding: 14px 18px;
+      min-width: 140px;
+      text-align: center;
+      position: relative;
+    }
+
+    .box-title {
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .box-sub {
+      font-size: 11px;
+      opacity: 0.75;
+      line-height: 1.4;
+    }
+
+    /* ── Colour themes ── */
+    .user      { background: #e8f5e9; border: 1.5px solid #a5d6a7; color: #1b5e20; }
+    .frontend  { background: #e3f2fd; border: 1.5px solid #90caf9; color: #0d47a1; }
+    .backend   { background: #fff3e0; border: 1.5px solid #ffcc80; color: #e65100; }
+    .infra     { background: #fce4ec; border: 1.5px solid #f48fb1; color: #880e4f; }
+    .aws       { background: #fff8e1; border: 1.5px solid #ffe082; color: #f57f17; }
+    .supabase  { background: #e8f5e9; border: 1.5px solid #a5d6a7; color: #1b5e20; }
+    .telegram  { background: #e3f2fd; border: 1.5px solid #90caf9; color: #0d47a1; }
+    .gmail     { background: #fce4ec; border: 1.5px solid #f48fb1; color: #880e4f; }
+
+    /* ── Arrow connector ── */
+    .arrow-block {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+      margin: 6px 0;
+    }
+
+    .arrow-line {
+      width: 2px;
+      background: #c9c0b3;
+      height: 28px;
+      margin: 0 auto;
+    }
+
+    .arrow-label {
+      font-size: 10px;
+      color: #8a9490;
+      background: #f5f4f0;
+      padding: 2px 8px;
+      border-radius: 10px;
+      border: 1px solid #d7d0c3;
+      white-space: nowrap;
+    }
+
+    .arrows-row {
+      display: flex;
+      justify-content: center;
+      gap: 60px;
+      margin: 6px 0;
+    }
+
+    .arrow-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+    }
+
+    .arrowhead {
+      width: 0;
+      height: 0;
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 7px solid #c9c0b3;
+    }
+
+    /* ── Section wrapper with background ── */
+    .section {
+      background: white;
+      border: 1.5px solid #e7e1d7;
+      border-radius: 16px;
+      padding: 20px 24px;
+      margin-bottom: 0;
+    }
+
+    /* ── EC2 wrapper ── */
+    .ec2-wrapper {
+      background: #fff8f6;
+      border: 2px dashed #ffb74d;
+      border-radius: 16px;
+      padding: 20px 24px;
+      margin-bottom: 0;
+    }
+
+    .ec2-wrapper .layer-label {
+      color: #e65100;
+    }
+
+    /* ── connector between sections ── */
+    .connector {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 4px 0;
+    }
+
+    .connector svg {
+      width: 100%;
+      max-width: 800px;
+    }
+
+    /* ── Legend ── */
+    .legend {
+      max-width: 1000px;
+      margin: 32px auto 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: #526056;
+    }
+
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+    }
+
+    .note {
+      max-width: 1000px;
+      margin: 20px auto 0;
+      font-size: 11px;
+      color: #8a9490;
+      text-align: center;
+      line-height: 1.8;
+    }
+
+    .bold { font-weight: 700; }
+  </style>
+</head>
+<body>
+
+  <h1>FridgeLedger — System Architecture</h1>
+  <p class="subtitle">AI-powered smart pantry management and grocery inflation tracking</p>
+
+  <div class="diagram">
+
+    <!-- ── USER LAYER ── -->
+    <div class="section">
+      <div class="layer-label">Users</div>
+      <div class="row">
+        <div class="box user">
+          <div class="box-title">Web Browser</div>
+          <div class="box-sub">Receipt upload<br>Pantry management<br>Analytics dashboard</div>
+        </div>
+        <div class="box telegram">
+          <div class="box-title">Telegram</div>
+          <div class="box-sub">Send receipt photo<br>AI chat corrections<br>Get extracted items</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- connector -->
+    <div class="arrows-row">
+      <div class="arrow-col">
+        <div class="arrow-label">HTTPS</div>
+        <div class="arrow-line"></div>
+        <div class="arrowhead"></div>
+      </div>
+      <div class="arrow-col">
+        <div class="arrow-label">Webhook (HTTPS)</div>
+        <div class="arrow-line"></div>
+        <div class="arrowhead"></div>
+      </div>
+    </div>
+
+    <!-- ── EC2 WRAPPER ── -->
+    <div class="ec2-wrapper">
+      <div class="layer-label">AWS EC2 t2.micro — 47.131.65.86 — fridgeledger(app).duckdns.org</div>
+
+      <!-- nginx -->
+      <div class="section" style="margin-bottom: 16px;">
+        <div class="layer-label">nginx — Reverse Proxy + SSL Termination (Let's Encrypt)</div>
+        <div class="row">
+          <div class="box infra">
+            <div class="box-title">fridgeledgerapp.duckdns.org</div>
+            <div class="box-sub">→ Next.js :3000</div>
+          </div>
+          <div class="box infra">
+            <div class="box-title">fridgeledger.duckdns.org</div>
+            <div class="box-sub">→ FastAPI :8000</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- arrows nginx → services -->
+      <div class="arrows-row">
+        <div class="arrow-col">
+          <div class="arrow-line"></div>
+          <div class="arrowhead"></div>
+        </div>
+        <div class="arrow-col">
+          <div class="arrow-line"></div>
+          <div class="arrowhead"></div>
+        </div>
+      </div>
+
+      <!-- frontend + backend -->
+      <div class="row" style="margin-bottom: 16px; align-items: flex-start;">
+
+        <!-- Frontend -->
+        <div class="section" style="flex: 1; min-width: 280px;">
+          <div class="layer-label">Frontend — Next.js 16, React 19, TypeScript</div>
+          <div class="row">
+            <div class="box frontend" style="flex:1;">
+              <div class="box-title">Receipt Upload</div>
+              <div class="box-sub">Scan &amp; correct receipts<br>AI Assistant chat</div>
+            </div>
+            <div class="box frontend" style="flex:1;">
+              <div class="box-title">Pantry &amp; Dashboard</div>
+              <div class="box-sub">Expiry tracking<br>Reminders</div>
+            </div>
+            <div class="box frontend" style="flex:1;">
+              <div class="box-title">Analytics</div>
+              <div class="box-sub">Spending trends<br>Inflation detection</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Backend -->
+        <div class="section" style="flex: 1; min-width: 280px;">
+          <div class="layer-label">Backend — FastAPI, Python 3.14, Uvicorn</div>
+          <div class="row">
+            <div class="box backend" style="flex:1;">
+              <div class="box-title">/receipts</div>
+              <div class="box-sub">Scan image<br>Chat corrections</div>
+            </div>
+            <div class="box backend" style="flex:1;">
+              <div class="box-title">/pantry</div>
+              <div class="box-sub">Items CRUD<br>Expiry calculation</div>
+            </div>
+            <div class="box backend" style="flex:1;">
+              <div class="box-title">/insights</div>
+              <div class="box-sub">Analytics<br>Inflation detection</div>
+            </div>
+            <div class="box backend" style="flex:1;">
+              <div class="box-title">/telegram</div>
+              <div class="box-sub">Webhook handler<br>Bot responses</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Cron -->
+      <div class="section">
+        <div class="layer-label">Scheduled Job — cron (daily 08:00 MYT)</div>
+        <div class="row">
+          <div class="box infra">
+            <div class="box-title">Expiry Reminder</div>
+            <div class="box-sub">Scans all users<br>Sends email if items expire within 7 days</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end EC2 -->
+
+    <!-- connector to external services -->
+    <div class="arrows-row">
+      <div class="arrow-col">
+        <div class="arrow-label">Supabase JS SDK</div>
+        <div class="arrow-line"></div>
+        <div class="arrowhead"></div>
+      </div>
+      <div class="arrow-col">
+        <div class="arrow-label">boto3 / AWS SDK</div>
+        <div class="arrow-line"></div>
+        <div class="arrowhead"></div>
+      </div>
+      <div class="arrow-col">
+        <div class="arrow-label">Supabase Python SDK</div>
+        <div class="arrow-line"></div>
+        <div class="arrowhead"></div>
+      </div>
+      <div class="arrow-col">
+        <div class="arrow-label">Gmail SMTP</div>
+        <div class="arrow-line"></div>
+        <div class="arrowhead"></div>
+      </div>
+    </div>
+
+    <!-- ── EXTERNAL SERVICES ── -->
+    <div class="section">
+      <div class="layer-label">External Services</div>
+      <div class="row">
+
+        <div class="box supabase">
+          <div class="box-title">Supabase Auth</div>
+          <div class="box-sub">JWT authentication<br>User signup / login<br>Session management</div>
+        </div>
+
+        <div class="box aws">
+          <div class="box-title">Amazon Bedrock</div>
+          <div class="box-sub">Claude Sonnet 4.6<br>Receipt OCR &amp; extraction<br>AI chat corrections</div>
+        </div>
+
+        <div class="box supabase">
+          <div class="box-title">Supabase Postgres</div>
+          <div class="box-sub">Receipts &amp; items<br>Price history<br>Pantry records</div>
+        </div>
+
+        <div class="box gmail">
+          <div class="box-title">Gmail SMTP</div>
+          <div class="box-sub">Expiry reminder<br>emails to users</div>
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- end diagram -->
+
+  <!-- Legend -->
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#a5d6a7;"></div>User / Supabase</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#90caf9;"></div>Frontend / Telegram</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#ffcc80;"></div>Backend API routes</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#f48fb1;"></div>Infrastructure (nginx, cron)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#ffe082;"></div>AWS / Amazon Bedrock</div>
+    <div class="legend-item"><div class="legend-dot" style="border: 2px dashed #ffb74d; background: transparent;"></div>EC2 instance boundary</div>
+  </div>
+
+  <div class="note">
+    <span class="bold">EC2:</span> t2.micro, ap-southeast-1 (Singapore) &nbsp;|&nbsp;
+    <span class="bold">SSL:</span> Let's Encrypt via Certbot (auto-renews) &nbsp;|&nbsp;
+    <span class="bold">Domain:</span> DuckDNS (free subdomain) &nbsp;|&nbsp;
+    <span class="bold">Process manager:</span> systemd (auto-restart on crash/reboot)
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,64 @@
+# Environment files
+.env
+.env.*
+!.env.example
+frontend/.env.local
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+
+# Python virtual environments
+.venv/
+venv/
+.myenv/
+myenv/
+.env/
+env/
+
+# Node
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+
+# Logs
+*.log
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Local Models and weights
+models/
+*.gguf
+*.bin
+*.pt
+*.onnx
+*.safetensors
+
+# Test assets
+test/*.jpg
+test/*.jpeg
+test/*.png
+
+# Bun
+.bun/
+.bun-build/
+.bun-cache/
+bun.lock
+bun.lockb
+
+# Kiro Requirements
+.kiro/
+
+# npm
+package-lock.json
