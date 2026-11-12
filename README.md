@@ -156,5 +156,3 @@ The MVP is successful when a user can:
 - Store receipt and pantry data in Supabase.
 - Detect at least one price increase or shrinkflation case from historical purchases.
 - View pantry and analytics screens.
-
-### Testing Message
